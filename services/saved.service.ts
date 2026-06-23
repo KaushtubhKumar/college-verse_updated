@@ -13,8 +13,8 @@ export async function saveCollege(userId: string, collegeId: string) {
   return prisma.saved.create({ data: { userId, collegeId } });
 }
 
-export async function unsaveCollege(userId: string, savedId: string) {
-  return prisma.saved.deleteMany({ where: { id: savedId, userId } });
+export async function unsaveCollege(userId: string, collegeId: string) {
+  return prisma.saved.deleteMany({ where: { collegeId, userId } });
 }
 
 export async function getSavedIds(userId: string): Promise<string[]> {

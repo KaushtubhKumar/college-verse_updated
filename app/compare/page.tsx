@@ -13,13 +13,31 @@ interface CompareCollege extends College {
 
 type FactorKey = "placement" | "fees" | "roi" | "location" | "rating";
 
-const FACTOR_META: Record<FactorKey, { label: string; icon: string; desc: string }> = {
-  placement: { label: "Placements", icon: "💼", desc: "Avg package & placement rate" },
-  fees:      { label: "Low Fees",   icon: "💰", desc: "Affordable tuition" },
-  roi:       { label: "ROI",        icon: "📈", desc: "Package vs fees ratio" },
-  location:  { label: "Location",   icon: "📍", desc: "City & state preference" },
-  rating:    { label: "Rating",     icon: "⭐", desc: "Overall college rating" },
+const FACTOR_ICONS: Record<FactorKey, string> = {
+  placement: "M20 7h-3V5a2 2 0 00-2-2H9a2 2 0 00-2 2v2H4a1 1 0 00-1 1v11a1 1 0 001 1h16a1 1 0 001-1V8a1 1 0 00-1-1zM9 5h6v2H9V5z",
+  fees:      "M12 2a10 10 0 110 20 10 10 0 010-20zm0 4v2m0 8v2m-3-9.5c0-1.1 1.34-2 3-2s3 .9 3 2-1.34 2-3 2-3 .9-3 2 1.34 2 3 2 3-.9 3-2",
+  roi:       "M3 17l5-5 4 4 8-8M14 8h6v6",
+  location:  "M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z|M15 11a3 3 0 11-6 0 3 3 0 016 0z",
+  rating:    "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z",
 };
+
+const FACTOR_META: Record<FactorKey, { label: string; desc: string }> = {
+  placement: { label: "Placements", desc: "Avg package & placement rate" },
+  fees:      { label: "Low fees",   desc: "Affordable tuition" },
+  roi:       { label: "ROI",        desc: "Package vs fees ratio" },
+  location:  { label: "Location",   desc: "City & state preference" },
+  rating:    { label: "Rating",     desc: "Overall college rating" },
+};
+
+function FactorIcon({ factor, className }: { factor: FactorKey; className?: string }) {
+  const d = FACTOR_ICONS[factor];
+  const paths = d.split("|");
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      {paths.map((p, i) => <path key={i} d={p} />)}
+    </svg>
+  );
+}
 
 const DEFAULT_PRIORITIES: FactorKey[] = ["placement", "roi", "fees", "rating", "location"];
 
@@ -114,15 +132,15 @@ function PreferencesModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md">
-        <div className="p-6 border-b border-gray-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/60 backdrop-blur-sm">
+      <div className="bg-paper rounded-3xl shadow-2xl w-full max-w-md border border-line">
+        <div className="p-6 border-b border-line">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Your priorities</h2>
-              <p className="text-sm text-gray-500 mt-0.5">Drag or use arrows to rank what matters most</p>
+              <h2 className="font-display text-lg font-semibold text-charcoal">Your priorities</h2>
+              <p className="text-sm text-muted mt-0.5">Drag or use arrows to rank what matters most</p>
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
+            <button onClick={onClose} className="text-muted hover:text-charcoal p-1 transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
           </div>
@@ -140,32 +158,34 @@ function PreferencesModal({
                 onDragEnd={() => { setDragging(null); setDragOver(null); }}
                 className={cn(
                   "flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all cursor-grab active:cursor-grabbing select-none",
-                  dragOver === i ? "border-indigo-400 bg-indigo-50 scale-[1.02]" : "border-gray-100 bg-gray-50 hover:border-gray-200",
+                  dragOver === i ? "border-gold-500 bg-gold-100/50 scale-[1.02]" : "border-line bg-white hover:border-gold-500/40",
                   dragging === i ? "opacity-40" : ""
                 )}
               >
                 <span className={cn(
-                  "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0",
-                  i === 0 ? "bg-indigo-700 text-white" :
-                  i === 1 ? "bg-indigo-500 text-white" :
-                  i === 2 ? "bg-indigo-300 text-indigo-900" :
-                  "bg-gray-200 text-gray-600"
+                  "w-7 h-7 rounded-full flex items-center justify-center text-xs font-mono-label font-bold flex-shrink-0",
+                  i === 0 ? "bg-gold-500 text-ink-950" :
+                  i === 1 ? "bg-gold-300 text-ink-950" :
+                  i === 2 ? "bg-paper-dim text-ink-800 border border-line" :
+                  "bg-paper-dim text-muted border border-line"
                 )}>{i + 1}</span>
-                <span className="text-xl flex-shrink-0">{meta.icon}</span>
+                <span className="w-8 h-8 rounded-xl bg-ink-950 text-gold-500 flex items-center justify-center flex-shrink-0">
+                  <FactorIcon factor={factor} className="w-4 h-4" />
+                </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900">{meta.label}</p>
-                  <p className="text-xs text-gray-400">{meta.desc}</p>
+                  <p className="text-sm font-semibold text-charcoal">{meta.label}</p>
+                  <p className="text-xs text-muted">{meta.desc}</p>
                 </div>
-                <span className="text-xs font-mono text-gray-400 flex-shrink-0">{Math.round(PRIORITY_WEIGHTS[i] * 100)}%</span>
+                <span className="text-xs font-mono-label text-muted flex-shrink-0">{Math.round(PRIORITY_WEIGHTS[i] * 100)}%</span>
                 <div className="flex flex-col gap-0.5 flex-shrink-0">
-                  <button onClick={() => moveUp(i)} disabled={i === 0} className="text-gray-300 hover:text-gray-600 disabled:opacity-20 transition-colors">
+                  <button onClick={() => moveUp(i)} disabled={i === 0} className="text-ink-400 hover:text-ink-800 disabled:opacity-20 transition-colors">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7"/></svg>
                   </button>
-                  <button onClick={() => moveDown(i)} disabled={i === local.length - 1} className="text-gray-300 hover:text-gray-600 disabled:opacity-20 transition-colors">
+                  <button onClick={() => moveDown(i)} disabled={i === local.length - 1} className="text-ink-400 hover:text-ink-800 disabled:opacity-20 transition-colors">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7"/></svg>
                   </button>
                 </div>
-                <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-ink-200 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                   <circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/>
                   <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
                   <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
@@ -175,10 +195,10 @@ function PreferencesModal({
           })}
         </div>
         <div className="p-6 pt-0 flex gap-3">
-          <button onClick={() => setLocal([...DEFAULT_PRIORITIES])} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+          <button onClick={() => setLocal([...DEFAULT_PRIORITIES])} className="flex-1 py-2.5 rounded-xl border border-line text-sm text-muted hover:bg-paper-dim transition-colors">
             Reset defaults
           </button>
-          <button onClick={() => { onSave(local); onClose(); }} className="flex-1 py-2.5 rounded-xl bg-indigo-700 text-white text-sm font-semibold hover:bg-indigo-800 transition-colors">
+          <button onClick={() => { onSave(local); onClose(); }} className="flex-1 py-2.5 rounded-xl bg-ink-950 text-paper text-sm font-semibold hover:bg-ink-900 transition-colors">
             Save & analyse
           </button>
         </div>
@@ -309,8 +329,10 @@ export default function ComparePage() {
   }, []);
 
   useEffect(() => {
-    if (!ids.length) { setLoading(false); return; }
-    fetch(`/api/compare?ids=${ids.join(",")}`)
+    if (!ids.length) { setLoading(false); setColleges([]); return; }
+    const controller = new AbortController();
+    setLoading(true);
+    fetch(`/api/compare?ids=${ids.join(",")}`, { signal: controller.signal })
       .then((r) => r.json())
       .then((d) => {
         const cols: CompareCollege[] = d.colleges || [];
@@ -320,9 +342,16 @@ export default function ComparePage() {
           setScores(computed);
           const best = computed.reduce((a, b) => b.total > a.total ? b : a);
           setBestFitId(best.id);
+        } else {
+          setScores([]);
+          setBestFitId(null);
         }
       })
+      .catch((err) => {
+        if (err.name !== "AbortError") console.error("Failed to load compare data", err);
+      })
       .finally(() => setLoading(false));
+    return () => controller.abort();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams.toString()]);
 
@@ -417,17 +446,24 @@ export default function ComparePage() {
           <Link href="/" className="text-sm text-ink-800 hover:text-gold-600 font-medium">← Add more</Link>
         </div>
 
-        {/* Best Fit CTA */}
+        {/* Best Fit panel */}
         {canAnalyse && (
-          <div className="bg-ink-950 rounded-2xl px-6 py-4 mb-6">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-white mb-1">Best fit for you</p>
-                <div className="flex flex-wrap gap-1.5">
+          <div className="bg-ink-950 rounded-3xl px-6 sm:px-7 py-6 mb-8 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gold-500/[0.06] rounded-full -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-5 relative">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-gold-500 text-lg leading-none">✦</span>
+                  <h2 className="font-display text-lg font-semibold text-white">Best fit for you</h2>
+                </div>
+                <p className="text-sm text-ink-300 mb-3">Ranked by what matters most to you, in order</p>
+                <div className="flex flex-wrap gap-2">
                   {priorities.map((f, i) => (
-                    <span key={f} className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-ink-800 text-ink-200">
-                      <span className="font-bold text-gold-400">#{i+1}</span>
-                      {FACTOR_META[f].icon} {FACTOR_META[f].label}
+                    <span key={f} className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full bg-ink-900 border border-ink-700 text-ink-200">
+                      <span className="font-mono-label font-bold text-gold-400">{i + 1}</span>
+                      <FactorIcon factor={f} className="w-3.5 h-3.5 text-gold-500" />
+                      {FACTOR_META[f].label}
                     </span>
                   ))}
                 </div>
@@ -435,59 +471,66 @@ export default function ComparePage() {
               <div className="flex items-center gap-2 flex-shrink-0">
                 <button
                   onClick={() => setShowPrefs(true)}
-                  className="text-xs text-ink-300 hover:text-white border border-ink-700 hover:border-ink-500 px-3 py-2 rounded-xl transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-300 hover:text-white border border-ink-700 hover:border-ink-500 px-3.5 py-2.5 rounded-xl transition-colors"
                 >
-                  ✏️ Edit priorities
-                </button>
-                <button
-                  onClick={() => {
-                    if (!bestFitId) {
-                      runAnalysis(priorities, colleges);
-                    } else {
-                      setShowPrefs(true);
-                    }
-                  }}
-                  className="inline-flex items-center gap-2 bg-gold-500 hover:bg-gold-600 text-ink-950 font-bold text-sm px-5 py-2.5 rounded-xl ring-4 ring-gold-700/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  ✦ Best fit for U
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                  Edit priorities
                 </button>
               </div>
             </div>
 
-            {/* Score bars — shown after analysis */}
-            {scores.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-ink-800 grid gap-2" style={{ gridTemplateColumns: `repeat(${col}, 1fr)` }}>
-                {colleges.map((c) => {
-                  const s = scores.find((x) => x.id === c.id);
-                  const pct = s ? Math.round(s.total * 100) : 0;
-                  const isBest = bestFitId === c.id;
-                  return (
-                    <div key={c.id}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-ink-300 truncate">{c.name.split(" ").slice(0,3).join(" ")}</span>
-                        <span className={cn("text-xs font-bold", isBest ? "text-gold-400" : "text-ink-300")}>{pct}%</span>
+            {/* Winner callout + score bars */}
+            {scores.length > 0 && (() => {
+              const winner = colleges.find((c) => c.id === bestFitId);
+              const winnerScore = scores.find((s) => s.id === bestFitId);
+              return (
+                <div className="mt-5 pt-5 border-t border-ink-800 relative">
+                  {winner && (
+                    <div className="flex items-center gap-3 mb-5 p-3.5 pr-4 bg-gold-500/10 border border-gold-500/25 rounded-2xl">
+                      <SealBadge label="★" tone="gold" size="md" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] font-mono-label uppercase tracking-wide text-gold-400 mb-0.5">Top match</p>
+                        <p className="font-display font-semibold text-white text-base truncate">{winner.name}</p>
                       </div>
-                      <div className="h-1.5 bg-ink-800 rounded-full overflow-hidden">
-                        <div
-                          className={cn("h-full rounded-full transition-all duration-700", isBest ? "bg-gold-500" : "bg-ink-600")}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
+                      {winnerScore && (
+                        <span className="font-mono-label font-bold text-gold-400 text-lg flex-shrink-0">{Math.round(winnerScore.total * 100)}%</span>
+                      )}
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                  )}
+                  <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${col}, 1fr)` }}>
+                    {colleges.map((c) => {
+                      const s = scores.find((x) => x.id === c.id);
+                      const pct = s ? Math.round(s.total * 100) : 0;
+                      const isBest = bestFitId === c.id;
+                      return (
+                        <div key={c.id}>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className={cn("text-xs truncate", isBest ? "text-white font-semibold" : "text-ink-300")}>{c.name.split(" ").slice(0,3).join(" ")}</span>
+                            <span className={cn("text-xs font-mono-label font-bold flex-shrink-0 ml-2", isBest ? "text-gold-400" : "text-ink-400")}>{pct}%</span>
+                          </div>
+                          <div className="h-2 bg-ink-800 rounded-full overflow-hidden">
+                            <div
+                              className={cn("h-full rounded-full transition-all duration-700", isBest ? "bg-gold-500" : "bg-ink-600")}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Get AI verdict button */}
             {bestFitId && !verdict && !verdictLoading && (
-              <div className="mt-4 pt-4 border-t border-ink-800 flex items-center justify-between gap-4">
-                <p className="text-xs text-ink-400">Want a detailed explanation with pros & cons from AI?</p>
+              <div className="mt-5 pt-5 border-t border-ink-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <p className="text-sm text-ink-300">Want a detailed breakdown with pros & cons for each college?</p>
                 <button
                   onClick={handleGetVerdict}
-                  className="text-xs font-semibold text-gold-400 hover:text-gold-300 border border-gold-500/30 hover:border-gold-500/60 px-4 py-2 rounded-xl transition-colors flex items-center gap-1.5"
+                  className="inline-flex items-center justify-center gap-2 text-sm font-semibold text-ink-950 bg-gold-500 hover:bg-gold-600 px-5 py-2.5 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] flex-shrink-0"
                 >
-                  ✦ Get AI verdict
+                  <span className="text-base leading-none">✦</span> Get AI verdict
                 </button>
               </div>
             )}
@@ -502,8 +545,8 @@ export default function ComparePage() {
         />
 
         {/* College headers */}
-        <div className="grid gap-4 mb-6 mt-6" style={{ gridTemplateColumns: `200px repeat(${col}, 1fr)` }}>
-          <div />
+        <div className="grid gap-4 mb-6 mt-8" style={{ gridTemplateColumns: `200px repeat(${col}, 1fr)` }}>
+          <div className="hidden sm:block" />
           {colleges.map((c) => {
             const isBest = bestFitId === c.id;
             const s = scores.find((x) => x.id === c.id);
@@ -511,22 +554,30 @@ export default function ComparePage() {
               <div
                 key={c.id}
                 className={cn(
-                  "relative text-white rounded-2xl p-5 text-center transition-all",
-                  isBest ? "bg-ink-950 ring-4 ring-gold-500" : "bg-ink-900"
+                  "relative text-white rounded-2xl p-6 text-center transition-all flex flex-col",
+                  isBest ? "bg-ink-950 ring-2 ring-gold-500 shadow-[0_12px_32px_-8px_rgba(186,138,51,0.35)]" : "bg-ink-900"
                 )}
               >
                 {isBest && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                     <SealBadge label="★" tone="gold" size="sm" title="Best fit for you" />
                   </div>
                 )}
-                <h2 className="font-display font-semibold text-base leading-snug mb-2 mt-1">{c.name}</h2>
-                <p className="text-ink-200 text-xs mb-3">{c.location}</p>
-                {isBest && <p className="text-[11px] font-mono uppercase tracking-wide text-gold-500 mb-2">Best fit for U</p>}
+                {isBest && <p className="text-[10px] font-mono-label font-semibold uppercase tracking-widest text-gold-500 mb-2 mt-1.5">Best fit</p>}
+                <h2 className={cn("font-display font-semibold text-base leading-snug mb-1.5", !isBest && "mt-1")}>{c.name}</h2>
+                <p className="text-ink-200 text-xs mb-4 flex items-center justify-center gap-1">
+                  <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  {c.location}
+                </p>
                 {s && (
-                  <p className="text-xs text-ink-300 mb-2">Match score: <span className={cn("font-bold", isBest ? "text-gold-400" : "text-white")}>{Math.round(s.total * 100)}%</span></p>
+                  <div className="mb-4">
+                    <p className={cn("font-mono-label font-bold text-2xl leading-none", isBest ? "text-gold-400" : "text-white")}>{Math.round(s.total * 100)}%</p>
+                    <p className="text-[11px] text-ink-300 mt-1">match score</p>
+                  </div>
                 )}
-                <Link href={`/college/${c.slug}`} className="inline-block text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full transition-colors">View details →</Link>
+                <Link href={`/college/${c.slug}`} className="mt-auto inline-flex items-center justify-center gap-1 text-xs font-medium bg-white/10 hover:bg-white/20 px-3 py-2 rounded-full transition-colors">
+                  View details <span aria-hidden="true">→</span>
+                </Link>
               </div>
             );
           })}
@@ -539,22 +590,23 @@ export default function ComparePage() {
             return (
               <div key={row.label}>
                 {sectionStart && (
-                  <div className="bg-paper-dim border-b border-t border-line px-5 py-2">
+                  <div className="bg-paper-dim border-b border-t border-line px-5 py-2.5">
                     <span className="text-xs font-mono-label font-semibold uppercase tracking-widest text-muted">{SECTION_TITLES[i]}</span>
                   </div>
                 )}
                 <div
-                  className="grid items-center border-b border-line last:border-0 hover:bg-gold-100/30 transition-colors"
+                  className="grid items-center border-b border-line last:border-0 hover:bg-gold-100/20 transition-colors"
                   style={{ gridTemplateColumns: `200px repeat(${col}, 1fr)` }}
                 >
-                  <div className="px-5 py-3.5">
+                  <div className="px-5 py-4">
                     <span className="text-sm text-muted font-medium">{row.label}</span>
                   </div>
                   {colleges.map((c) => {
                     const val = row.key(c);
+                    const isBest = bestFitId === c.id;
                     return (
-                      <div key={c.id} className={cn("px-4 py-3.5 text-center border-l border-line", bestFitId === c.id && "bg-gold-100/40")}>
-                        <span className="text-sm font-semibold text-charcoal tabular">{val}</span>
+                      <div key={c.id} className={cn("px-4 py-4 text-center border-l border-line", isBest && "bg-gold-100/30")}>
+                        <span className={cn("text-sm tabular", isBest ? "font-bold text-ink-900" : "font-semibold text-charcoal")}>{val}</span>
                       </div>
                     );
                   })}

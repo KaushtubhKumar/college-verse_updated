@@ -27,33 +27,31 @@ export default function CollegeCard({ college, savedIds = [], onSaveToggle }: Pr
   const { addCollege, removeCollege, isInCompare } = useCompareStore();
   const [saving, setSaving] = useState(false);
 
-  // const isSaved = savedIds.includes(college.id);
   const [localSaved, setLocalSaved] = useState(savedIds.includes(college.id));
   const inCompare = isInCompare(college.id);
 
-  // Add this useEffect in CollegeCard after the useState:
-useEffect(() => {
-  setLocalSaved(savedIds.includes(college.id));
-}, [savedIds, college.id]);
+  useEffect(() => {
+    setLocalSaved(savedIds.includes(college.id));
+  }, [savedIds, college.id]);
 
   async function handleSave(e: React.MouseEvent) {
     e.preventDefault();
     if (!session) { router.push("/login"); return; }
     setSaving(true);
     try {
-   if (localSaved) {
-  await fetch(`/api/saved/${college.id}`, { method: "DELETE" });
-  setLocalSaved(false);
-  onSaveToggle?.(college.id, false);
-} else {
-  await fetch("/api/saved", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ collegeId: college.id }),
-  });
-  setLocalSaved(true);
-  onSaveToggle?.(college.id, true);
-}
+      if (localSaved) {
+        await fetch(`/api/saved/${college.id}`, { method: "DELETE" });
+        setLocalSaved(false);
+        onSaveToggle?.(college.id, false);
+      } else {
+        await fetch("/api/saved", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ collegeId: college.id }),
+        });
+        setLocalSaved(true);
+        onSaveToggle?.(college.id, true);
+      }
     } finally {
       setSaving(false);
     }
@@ -87,7 +85,7 @@ useEffect(() => {
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {college.nirfRank && <SealBadge label={`#${college.nirfRank}`} tone="gold" size="sm" title={`NIRF Rank ${college.nirfRank}`} />}
-              <button onClick={handleSave} disabled={saving} className="p-1.5 rounded-full hover:bg-paper-dim transition-colors" title={isSaved ? "Remove from saved" : "Save college"}>
+              <button onClick={handleSave} disabled={saving} className="p-1.5 rounded-full hover:bg-paper-dim transition-colors" title={localSaved ? "Remove from saved" : "Save college"}>
                 <svg className={cn("w-5 h-5 transition-colors", localSaved ? "fill-clay-600 stroke-clay-600" : "fill-none stroke-ink-400 hover:stroke-clay-600")} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
               </button>
             </div>

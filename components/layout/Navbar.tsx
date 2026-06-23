@@ -22,7 +22,7 @@ export default function Navbar() {
             <Link href="/" className="text-sm font-medium text-ink-200 hover:text-gold-100 transition-colors">Colleges</Link>
             <Link href="/community" className="text-sm font-medium text-ink-200 hover:text-gold-100 transition-colors">Community</Link>
             <Link href="/predictor" className="text-sm font-medium text-ink-200 hover:text-gold-100 transition-colors">Predictor</Link>
-            <Link href="/compare" className="relative text-sm font-medium text-ink-200 hover:text-gold-100 transition-colors">
+            <Link href={compareList.length ? `/compare?ids=${compareList.map((c) => c.id).join(",")}` : "/compare"} className="relative text-sm font-medium text-ink-200 hover:text-gold-100 transition-colors">
               Compare
               {compareList.length > 0 && (
                 <span className="absolute -top-2 -right-4 bg-gold-500 text-ink-950 text-[10px] font-mono-label font-bold rounded-full w-4 h-4 flex items-center justify-center">{compareList.length}</span>
@@ -54,7 +54,7 @@ export default function Navbar() {
             <Link href="/" className="text-sm font-medium text-ink-200 py-1">Colleges</Link>
             <Link href="/community" className="text-sm font-medium text-ink-200 py-1">Community</Link>
             <Link href="/predictor" className="text-sm font-medium text-ink-200 py-1">Predictor</Link>
-            <Link href="/compare" className="text-sm font-medium text-ink-200 py-1">Compare {compareList.length > 0 && `(${compareList.length})`}</Link>
+            <Link href={compareList.length ? `/compare?ids=${compareList.map((c) => c.id).join(",")}` : "/compare"} className="text-sm font-medium text-ink-200 py-1">Compare {compareList.length > 0 && `(${compareList.length})`}</Link>
             {session ? (
               <>
                 <Link href="/saved" className="text-sm font-medium text-ink-200 py-1">Saved</Link>

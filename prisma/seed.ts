@@ -117,7 +117,7 @@ async function main() {
   });
   console.log("✅ Demo user: demo@college.dev / demo1234");
 
- // Colleges from NIRF 2024
+  // Colleges from NIRF 2024
   let count = 0;
   const seenSlugs = new Set<string>();
   const skipped: string[] = [];
@@ -173,7 +173,8 @@ async function main() {
     console.log(`⚠️  Skipped ${skipped.length} duplicate slug(s):`);
     skipped.forEach((s) => console.log(`   - ${s}`));
   }
-  
+}
+
 async function seedCommunities() {
   await prisma.answer.deleteMany();
   await prisma.question.deleteMany();
@@ -202,5 +203,8 @@ async function seedCommunities() {
 
 main()
   .then(() => seedCommunities())
-  .catch(console.error)
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  })
   .finally(() => prisma.$disconnect());
