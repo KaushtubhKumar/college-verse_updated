@@ -6,7 +6,8 @@
 const { createServer } = require("http");
 const { Server } = require("socket.io");
 
-const PORT = process.env.SOCKET_PORT || 3001;
+const PORT = process.env.PORT || process.env.SOCKET_PORT || 3001;
+
 const CLIENT_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
 
 const httpServer = createServer();

@@ -1,120 +1,108 @@
 import { NextResponse } from "next/server";
 
-interface CollegePayload {
-  id: string;
-  name: string;
-  location: string;
-  type: string;
-  feesMin: number;
-  feesMax: number;
-  rating: number;
-  naacGrade: string | null;
-  nirfRank: number | null;
-  avgPackage: number | null;
-  highestPackage: number | null;
-  placementRate: number | null;
-  topRecruiters: string[];
-}
-
-interface Priority {
-  factor: string;
-  weight: number;
-  rank: number;
-}
-
-interface ScoreEntry {
-  collegeName: string;
-  score: number;
-}
-
 export async function POST(req: Request) {
   try {
-    const { colleges, priorities, scores } = (await req.json()) as {
-      colleges: CollegePayload[];
-      priorities: Priority[];
-      scores: ScoreEntry[];
-    };
+    const { colleges, criteria } = await req.json();
 
-    if (!colleges?.length || !priorities?.length) {
-      return NextResponse.json({ error: "Missing data" }, { status: 400 });
+    if (!colleges || !Array.isArray(colleges) || colleges.length === 0) {
+      return NextResponse.json(
+        { error: "Colleges data is required for a verdict" },
+        { status: 400 }
+      );
     }
 
-    const priorityList = priorities
-      .map((p) => `  ${p.rank}. ${p.factor} (weight: ${Math.round(p.weight * 100)}%)`)
-      .join("\n");
+    // 1. Build the system-level instruction prompt for structural safety
+    const prompt = `
+      You are an expert academic advisor. Compare the following colleges based on these user preferences: ${criteria || "General Overview, Placements, and Campus Life"}.
+      
+      Colleges data: ${JSON.stringify(colleges)}
 
-    const collegeDetails = colleges
-      .map((c) => {
-        const score = scores.find((s) => s.collegeName === c.name);
-        return `
-### ${c.name}
-- Location: ${c.location} | Type: ${c.type}
-- NIRF Rank: ${c.nirfRank ?? "N/A"} | NAAC: ${c.naacGrade ?? "N/A"} | Rating: ${c.rating}/5
-- Fees: ₹${(c.feesMin / 100000).toFixed(1)}L – ₹${(c.feesMax / 100000).toFixed(1)}L per year
-- Avg Package: ${c.avgPackage ? `₹${(c.avgPackage / 100000).toFixed(1)}L` : "N/A"}
-- Highest Package: ${c.highestPackage ? `₹${(c.highestPackage / 100000).toFixed(1)}L` : "N/A"}
-- Placement Rate: ${c.placementRate ?? "N/A"}%
-- ROI: ${c.avgPackage && c.feesMax ? (c.avgPackage / c.feesMax).toFixed(2) + "x" : "N/A"}
-- Top Recruiters: ${c.topRecruiters.slice(0, 4).join(", ") || "N/A"}
-- Weighted score: ${score ? Math.round(score.score * 100) + "%" : "N/A"}`;
-      })
-      .join("\n");
+      You MUST respond with a valid JSON object matching this EXACT structural schema. Do not wrap the JSON in markdown code blocks like \`\`\`json. 
 
-    const prompt = `You are a college admissions advisor helping a student choose between colleges based on their stated priorities.
+      Required JSON Schema:
+      {
+        "winner": "Name of the overall recommended college",
+        "verdict": "A comprehensive summary explaining why this college is the winner based on the criteria.",
+        "breakdown": [
+          {
+            "criterion": "Criterion Name (e.g., Placements)",
+            "analysis": "Comparative breakdown for this specific criterion between the colleges."
+          }
+        ],
+        "prosCons": {
+          "collegeName1": {
+            "pros": ["Pro 1", "Pro 2"],
+            "cons": ["Con 1", "Con 2"]
+          },
+          "collegeName2": {
+            "pros": ["Pro 1", "Pro 2"],
+            "cons": ["Con 1", "Con 2"]
+          }
+        }
+      }
+    `;
 
-## Student priorities (ranked by importance):
-${priorityList}
-
-## Colleges being compared:
-${collegeDetails}
-
-Based on the student's priority ranking and the college data above, provide a structured recommendation. Return ONLY valid JSON in this exact format with no markdown, no backticks, no preamble:
-
-{
-  "winner": "<college id or name>",
-  "winnerName": "<full college name>",
-  "summary": "<2-3 sentence overall recommendation explaining why the winner fits this student's priorities best>",
-  "breakdown": [
-    {
-      "collegeName": "<name>",
-      "pros": ["<strength 1 relevant to priorities>", "<strength 2>", "<strength 3>"],
-      "cons": ["<weakness 1 relevant to priorities>", "<weakness 2>"]
+    // 2. Safely grab the API Key from environment variables
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error("Missing GEMINI_API_KEY in environment configuration.");
+      return NextResponse.json(
+        { error: "AI comparison service is currently unconfigured." },
+        { status: 500 }
+      );
     }
-  ],
-  "finalTake": "<1-2 sentence punchy closing advice specific to this student's priority order>"
-}
 
-Be specific, data-driven, and reference actual numbers from the college data. Keep each pro/con under 10 words.`;
-
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
+    // 3. Dispatch the fetch to the standard Google Gemini API endpoint
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: prompt }],
+            },
+          ],
+          generationConfig: {
+            responseMimeType: "application/json", // Hard-forces Gemini to reply in strict JSON format
+            temperature: 0.2,
+          },
+        }),
+      }
+    );
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("Anthropic API error:", data);
-      return NextResponse.json({ error: "AI verdict failed" }, { status: 500 });
+      console.error("Gemini API Error Response:", data);
+      return NextResponse.json(
+        { error: "Failed to generate AI verdict from Gemini" },
+        { status: 500 }
+      );
     }
 
-    const rawText = data.content
-      .map((block: { type: string; text?: string }) => (block.type === "text" ? block.text : ""))
-      .join("")
-      .trim();
+    // 4. Safely extract text from the unique Google response payload tree
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
-    // Strip any accidental markdown fences
-    const cleaned = rawText.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
-    const verdict = JSON.parse(cleaned);
+    if (!rawText) {
+      return NextResponse.json(
+        { error: "Empty response generated by AI service" },
+        { status: 500 }
+      );
+    }
 
-    return NextResponse.json({ verdict });
-  } catch (e) {
-    console.error("Verdict route error:", e);
-    return NextResponse.json({ error: "Failed to generate verdict" }, { status: 500 });
+    // 5. Parse the raw text string directly into an object to deliver clean JSON to your frontend
+    const parsedVerdict = JSON.parse(rawText);
+    return NextResponse.json(parsedVerdict);
+
+  } catch (error: any) {
+    console.error("Error inside compare/verdict route:", error);
+    return NextResponse.json(
+      { error: "An internal server error occurred while analyzing the comparison." },
+      { status: 500 }
+    );
   }
 }
