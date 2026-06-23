@@ -50,6 +50,7 @@ export default function CollegeCard({ college, savedIds = [], onSaveToggle }: Pr
           body: JSON.stringify({ collegeId: college.id }),
         });
         setLocalSaved(true);
+        setLocalSaved(true);
         onSaveToggle?.(college.id, true);
       }
     } finally {

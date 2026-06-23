@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatFees, formatPackage, cn } from "@/lib/utils";
@@ -93,6 +93,7 @@ function computeWeightedScores(colleges: CompareCollege[], priorities: FactorKey
   });
 }
 
+// ── Preferences Modal ──────────────────────────────────────────────────────────
 function PreferencesModal({
   priorities,
   onSave,
@@ -206,6 +207,7 @@ function PreferencesModal({
   );
 }
 
+// ── LLM Verdict Panel ──────────────────────────────────────────────────────────
 interface Verdict {
   winner: string;
   winnerName: string;
@@ -303,7 +305,8 @@ function VerdictPanel({
   );
 }
 
-function ComparePageContent() {
+// ── Main Component ─────────────────────────────────────────────────────────────
+export default function ComparePage() {
   const searchParams = useSearchParams();
   const ids = (searchParams.get("ids") || "").split(",").filter(Boolean).slice(0, 3);
 
@@ -542,8 +545,8 @@ function ComparePageContent() {
         />
 
         {/* College headers */}
-        <div className="grid gap-4 mb-6 mt-8" style={{ gridTemplateColumns: `200px repeat(${col}, 1fr)` }}>
-          <div className="hidden sm:block" />
+        <div className="grid gap-4 mb-6 mt-8" style={{ gridTemplateColumns: `minmax(120px, 160px) repeat(${col}, 1fr)` }}>
+          <div />
           {colleges.map((c) => {
             const isBest = bestFitId === c.id;
             const s = scores.find((x) => x.id === c.id);
@@ -593,9 +596,9 @@ function ComparePageContent() {
                 )}
                 <div
                   className="grid items-center border-b border-line last:border-0 hover:bg-gold-100/20 transition-colors"
-                  style={{ gridTemplateColumns: `200px repeat(${col}, 1fr)` }}
+                  style={{ gridTemplateColumns: `minmax(120px, 160px) repeat(${col}, 1fr)` }}
                 >
-                  <div className="px-5 py-4">
+                  <div className="px-4 py-4">
                     <span className="text-sm text-muted font-medium">{row.label}</span>
                   </div>
                   {colleges.map((c) => {
@@ -635,22 +638,5 @@ function ComparePageContent() {
         </div>
       </div>
     </>
-  );
-}
-
-export default function ComparePage() {
-  return (
-    <Suspense fallback={
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-paper-dim rounded w-48" />
-          <div className="grid grid-cols-3 gap-4">
-            {[1, 2, 3].map(i => <div key={i} className="h-64 bg-paper-dim rounded-2xl" />)}
-          </div>
-        </div>
-      </div>
-    }>
-      <ComparePageContent />
-    </Suspense>
   );
 }
