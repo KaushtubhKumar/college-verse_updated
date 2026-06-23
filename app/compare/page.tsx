@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatFees, formatPackage, cn } from "@/lib/utils";
@@ -93,7 +93,6 @@ function computeWeightedScores(colleges: CompareCollege[], priorities: FactorKey
   });
 }
 
-// ── Preferences Modal ──────────────────────────────────────────────────────────
 function PreferencesModal({
   priorities,
   onSave,
@@ -207,7 +206,6 @@ function PreferencesModal({
   );
 }
 
-// ── LLM Verdict Panel ──────────────────────────────────────────────────────────
 interface Verdict {
   winner: string;
   winnerName: string;
@@ -305,8 +303,7 @@ function VerdictPanel({
   );
 }
 
-// ── Main Component ─────────────────────────────────────────────────────────────
-export default function ComparePage() {
+function ComparePageContent() {
   const searchParams = useSearchParams();
   const ids = (searchParams.get("ids") || "").split(",").filter(Boolean).slice(0, 3);
 
@@ -638,5 +635,22 @@ export default function ComparePage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function ComparePage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-paper-dim rounded w-48" />
+          <div className="grid grid-cols-3 gap-4">
+            {[1, 2, 3].map(i => <div key={i} className="h-64 bg-paper-dim rounded-2xl" />)}
+          </div>
+        </div>
+      </div>
+    }>
+      <ComparePageContent />
+    </Suspense>
   );
 }
