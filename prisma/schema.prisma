@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  saved        Saved[]
+}
+
+model College {
+  id           String      @id @default(cuid())
+  name         String
+  slug         String      @unique
+  location     String
+  state        String
+  type         CollegeType
+  feesMin      Int
+  feesMax      Int
+  rating       Float
+  totalRatings Int         @default(0)
+  naacGrade    String?
+  nirfRank     Int?
+  established  Int?
+  overview     String
+  imageUrl     String?
+  createdAt    DateTime    @default(now())
+  courses      Course[]
+  placement    Placement?
+  saved        Saved[]
+
+  @@index([state])
+  @@index([rating])
+  @@index([feesMin])
+  @@index([type])
+  @@index([name])
+}
+
+model Course {
+  id        String      @id @default(cuid())
+  collegeId String
+  name      String
+  duration  Int
+  fees      Int
+  seats     Int?
+  level     CourseLevel
+  college   College     @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+}
+
+
+
+model Placement {
+  id             String  @id @default(cuid())
+  collegeId      String  @unique
+  avgPackage     Int
+  highestPackage Int
+  placementRate  Float
+  topRecruiters  String
+  year           Int
+  college        College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+}
+
+model Saved {
+  id        String   @id @default(cuid())
+  userId    String
+  collegeId String
+  savedAt   DateTime @default(now())
+  college   College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, collegeId])
+}
+
+model Community {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  subject     String     @unique
+  description String
+  icon        String?
+  questions   Question[]
+}
+
+model Question {
+  id          String    @id @default(cuid())
+  communityId String
+  authorName  String
+  userId      String?
+  title       String
+  body        String
+  createdAt   DateTime  @default(now())
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  answers     Answer[]
+
+  @@index([communityId])
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  questionId String
+  authorName String
+  userId     String?
+  body       String
+  createdAt  DateTime @default(now())
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+}
+
+enum CollegeType {
+  PRIVATE
+  PUBLIC
+  DEEMED
+}
+
+enum CourseLevel {
+  UG
+  PG
+  PHD
+  DIPLOMA
+}
