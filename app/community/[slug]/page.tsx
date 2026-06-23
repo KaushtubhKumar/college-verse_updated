@@ -11,10 +11,19 @@ export default async function CommunityPage({ params }: Props) {
 
   const { questions, total } = await getQuestions(community.id, 1);
 
+  // Serialize Prisma Date objects to ISO strings for frontend type compliance
+  const serializedQuestions = questions.map((q) => ({
+    ...q,
+    createdAt: q.createdAt.toISOString(),
+  }));
+
   return (
     <CommunityRoom
-      community={community}
-      initialQuestions={questions as Parameters<typeof CommunityRoom>[0]["initialQuestions"]}
+      community={{
+        ...community,
+        icon: community.icon ?? "",
+      }}
+      initialQuestions={serializedQuestions as unknown as Parameters<typeof CommunityRoom>[0]["initialQuestions"]}
       initialTotal={total}
     />
   );
