@@ -18840,55 +18840,6 @@
     ]
   },
   {
-    "name": "S.R.M. Institute of Science and Technology",
-    "slug": "s-r-m-institute-of-science-and-technology-11",
-    "location": "Chennai, Tamil Nadu",
-    "state": "Tamil Nadu",
-    "type": "PRIVATE",
-    "feesMin": 104400,
-    "feesMax": 146160,
-    "rating": 4.7,
-    "totalRatings": 432,
-    "naacGrade": "B++",
-    "nirfRank": 11,
-    "nirfField": "Architecture and Planning",
-    "established": null,
-    "overview": "A premier institution for architecture and urban planning offering programs that blend design thinking with technical expertise.",
-    "placement": {
-      "avgPackage": 653999,
-      "highestPackage": 2179999,
-      "placementRate": 82.5,
-      "topRecruiters": [
-        "Morphogenesis",
-        "Hafeez Contractor",
-        "CP Kukreja",
-        "Arcop",
-        "AECOM"
-      ],
-      "year": 2024
-    },
-    "courses": [
-      {
-        "name": "B.Arch",
-        "duration": 5,
-        "level": "UG",
-        "fees": 104400
-      },
-      {
-        "name": "M.Arch",
-        "duration": 2,
-        "level": "PG",
-        "fees": 73080
-      },
-      {
-        "name": "M.Planning Urban & Regional",
-        "duration": 2,
-        "level": "PG",
-        "fees": 67860
-      }
-    ]
-  },
-  {
     "name": "School of Planning and Architecture Bhopal",
     "slug": "school-of-planning-and-architecture-bhopal",
     "location": "Bhopal, Madhya Pradesh",

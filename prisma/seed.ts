@@ -117,9 +117,18 @@ async function main() {
   });
   console.log("✅ Demo user: demo@college.dev / demo1234");
 
-  // Colleges from NIRF 2024
+ // Colleges from NIRF 2024
   let count = 0;
+  const seenSlugs = new Set<string>();
+  const skipped: string[] = [];
+
   for (const college of NIRF_DATA) {
+    if (seenSlugs.has(college.slug)) {
+      skipped.push(`${college.name} (${college.slug})`);
+      continue;
+    }
+    seenSlugs.add(college.slug);
+
     await prisma.college.create({
       data: {
         name: college.name,
@@ -158,9 +167,13 @@ async function main() {
     count++;
     if (count % 50 === 0) console.log(`  → ${count}/${NIRF_DATA.length} inserted`);
   }
-  console.log(`✅ ${count} colleges seeded from NIRF 2024`);
-}
 
+  console.log(`✅ ${count} colleges seeded from NIRF 2024`);
+  if (skipped.length) {
+    console.log(`⚠️  Skipped ${skipped.length} duplicate slug(s):`);
+    skipped.forEach((s) => console.log(`   - ${s}`));
+  }
+  
 async function seedCommunities() {
   await prisma.answer.deleteMany();
   await prisma.question.deleteMany();
