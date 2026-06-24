@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useCompareStore } from "@/stores/compare.store";
 import { useSavedStore } from "@/stores/saved.store";
 import { formatFees, formatPackage, cn } from "@/lib/utils";
@@ -26,18 +26,11 @@ export default function CollegeCard({ college, savedIds = [], onSaveToggle }: Pr
   const { data: session } = useSession();
   const router = useRouter();
   const { addCollege, removeCollege, isInCompare } = useCompareStore();
-  const { isSaved: globalIsSaved, addId, removeId, loaded } = useSavedStore();
+  const { isSaved, addId, removeId, loaded } = useSavedStore();
   const [saving, setSaving] = useState(false);
 
-  // Use global store if loaded (reactive), else fall back to prop
-  const localSaved = loaded ? globalIsSaved(college.id) : savedIds.includes(college.id);
-
-  // Seed global store from props on first render if not yet loaded
-  useEffect(() => {
-    if (!loaded && savedIds.length > 0) {
-      useSavedStore.getState().setIds(savedIds);
-    }
-  }, [savedIds, loaded]);
+  // Single source of truth: global store once loaded, else prop fallback (saved/page passes savedIds)
+  const isCurrentlySaved = loaded ? isSaved(college.id) : savedIds.includes(college.id);
 
   const inCompare = isInCompare(college.id);
 
@@ -46,19 +39,46 @@ export default function CollegeCard({ college, savedIds = [], onSaveToggle }: Pr
     if (!session) { router.push("/login"); return; }
     if (saving) return;
     setSaving(true);
+
+    // Read the true current state at click time from the store directly
+    const currentlySaved = useSavedStore.getState().isSaved(college.id);
+
+    // Optimistic update
+    if (currentlySaved) {
+      removeId(college.id);
+      onSaveToggle?.(college.id, false);
+    } else {
+      addId(college.id);
+      onSaveToggle?.(college.id, true);
+    }
+
     try {
-      if (localSaved) {
-        await fetch(`/api/saved/${college.id}`, { method: "DELETE" });
-        removeId(college.id);
-        onSaveToggle?.(college.id, false);
+      if (currentlySaved) {
+        const res = await fetch(`/api/saved/${college.id}`, { method: "DELETE" });
+        if (!res.ok) {
+          addId(college.id);
+          onSaveToggle?.(college.id, true);
+        }
       } else {
-        await fetch("/api/saved", {
+        const res = await fetch("/api/saved", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ collegeId: college.id }),
         });
+        // 200 = already saved (upsert), 201 = newly saved — both are success
+        if (!res.ok) {
+          removeId(college.id);
+          onSaveToggle?.(college.id, false);
+        }
+      }
+    } catch {
+      // Network error — rollback
+      if (currentlySaved) {
         addId(college.id);
         onSaveToggle?.(college.id, true);
+      } else {
+        removeId(college.id);
+        onSaveToggle?.(college.id, false);
       }
     } finally {
       setSaving(false);
@@ -96,11 +116,11 @@ export default function CollegeCard({ college, savedIds = [], onSaveToggle }: Pr
               <button
                 onClick={handleSave}
                 disabled={saving}
-                aria-label={localSaved ? "Remove from saved" : "Save college"}
+                aria-label={isCurrentlySaved ? "Remove from saved" : "Save college"}
                 className="p-1.5 rounded-full hover:bg-paper-dim transition-colors"
               >
                 <svg
-                  className={cn("w-5 h-5 transition-all", localSaved ? "fill-clay-600 stroke-clay-600" : "fill-none stroke-ink-400 hover:stroke-clay-600", saving && "opacity-50")}
+                  className={cn("w-5 h-5 transition-all", isCurrentlySaved ? "fill-clay-600 stroke-clay-600" : "fill-none stroke-ink-400 hover:stroke-clay-600", saving && "opacity-50")}
                   viewBox="0 0 24 24"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />

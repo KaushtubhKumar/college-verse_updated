@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getSavedColleges, saveCollege } from "@/services/saved.service";
+import { getSavedColleges, saveCollege, isSaved } from "@/services/saved.service";
 import { z } from "zod";
 
 export async function GET() {
@@ -17,10 +17,13 @@ export async function POST(req: Request) {
   const body = await req.json();
   const parsed = z.object({ collegeId: z.string() }).safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid body" }, { status: 400 });
-  try {
-    const saved = await saveCollege(session.user.id, parsed.data.collegeId);
-    return NextResponse.json(saved, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Already saved" }, { status: 409 });
+
+  // Upsert: if already saved, just return success instead of 409
+  const alreadySaved = await isSaved(session.user.id, parsed.data.collegeId);
+  if (alreadySaved) {
+    return NextResponse.json({ saved: true }, { status: 200 });
   }
+
+  const saved = await saveCollege(session.user.id, parsed.data.collegeId);
+  return NextResponse.json(saved, { status: 201 });
 }
