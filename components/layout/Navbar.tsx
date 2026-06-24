@@ -1,13 +1,26 @@
 "use client";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
 import { useCompareStore } from "@/stores/compare.store";
-import { useState } from "react";
+import { useSavedStore } from "@/stores/saved.store";
+import type { College } from "@/types";
 
 export default function Navbar() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { colleges: compareList } = useCompareStore();
+  const { savedIds, setIds, loaded } = useSavedStore();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Load saved ids once on auth
+  useEffect(() => {
+    if (status !== "authenticated" || loaded) return;
+    fetch("/api/saved")
+      .then((r) => r.json())
+      .then((d) => setIds((d.colleges || []).map((c: College) => c.id)));
+  }, [status, loaded, setIds]);
+
+  const savedCount = savedIds.size;
 
   return (
     <nav className="sticky top-0 z-50 bg-ink-950 border-b border-ink-700">
@@ -22,15 +35,31 @@ export default function Navbar() {
             <Link href="/" className="text-sm font-medium text-ink-200 hover:text-gold-100 transition-colors">Colleges</Link>
             <Link href="/community" className="text-sm font-medium text-ink-200 hover:text-gold-100 transition-colors">Community</Link>
             <Link href="/predictor" className="text-sm font-medium text-ink-200 hover:text-gold-100 transition-colors">Predictor</Link>
-            <Link href={compareList.length ? `/compare?ids=${compareList.map((c) => c.id).join(",")}` : "/compare"} className="relative text-sm font-medium text-ink-200 hover:text-gold-100 transition-colors">
+
+            {/* Compare with badge */}
+            <Link
+              href={compareList.length ? `/compare?ids=${compareList.map((c) => c.id).join(",")}` : "/compare"}
+              className="relative text-sm font-medium text-ink-200 hover:text-gold-100 transition-colors"
+            >
               Compare
               {compareList.length > 0 && (
-                <span className="absolute -top-2 -right-4 bg-gold-500 text-ink-950 text-[10px] font-mono-label font-bold rounded-full w-4 h-4 flex items-center justify-center">{compareList.length}</span>
+                <span className="absolute -top-2 -right-4 bg-gold-500 text-ink-950 text-[10px] font-mono-label font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                  {compareList.length}
+                </span>
               )}
             </Link>
+
             {session ? (
               <>
-                <Link href="/saved" className="text-sm font-medium text-ink-200 hover:text-gold-100 transition-colors">Saved</Link>
+                {/* Saved with reactive count badge */}
+                <Link href="/saved" className="relative text-sm font-medium text-ink-200 hover:text-gold-100 transition-colors">
+                  Saved
+                  {savedCount > 0 && (
+                    <span className="absolute -top-2 -right-4 bg-clay-600 text-paper text-[10px] font-mono-label font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                      {savedCount > 9 ? "9+" : savedCount}
+                    </span>
+                  )}
+                </Link>
                 <span className="text-sm text-ink-400">{session.user.name || session.user.email}</span>
                 <button onClick={() => signOut()} className="text-sm font-medium text-ink-400 hover:text-clay-600 transition-colors">Sign out</button>
               </>
@@ -54,10 +83,14 @@ export default function Navbar() {
             <Link href="/" className="text-sm font-medium text-ink-200 py-1">Colleges</Link>
             <Link href="/community" className="text-sm font-medium text-ink-200 py-1">Community</Link>
             <Link href="/predictor" className="text-sm font-medium text-ink-200 py-1">Predictor</Link>
-            <Link href={compareList.length ? `/compare?ids=${compareList.map((c) => c.id).join(",")}` : "/compare"} className="text-sm font-medium text-ink-200 py-1">Compare {compareList.length > 0 && `(${compareList.length})`}</Link>
+            <Link href={compareList.length ? `/compare?ids=${compareList.map((c) => c.id).join(",")}` : "/compare"} className="text-sm font-medium text-ink-200 py-1">
+              Compare {compareList.length > 0 && `(${compareList.length})`}
+            </Link>
             {session ? (
               <>
-                <Link href="/saved" className="text-sm font-medium text-ink-200 py-1">Saved</Link>
+                <Link href="/saved" className="text-sm font-medium text-ink-200 py-1">
+                  Saved {savedCount > 0 && `(${savedCount})`}
+                </Link>
                 <button onClick={() => signOut()} className="text-sm font-medium text-left text-clay-600 py-1">Sign out</button>
               </>
             ) : (
