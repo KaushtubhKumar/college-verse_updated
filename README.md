@@ -1,5 +1,7 @@
 # CollegeFinder — College Discovery Platform
 
+live link for the platform : https://college-verse-final-frontend.onrender.com
+
 A production-grade full-stack college discovery and comparison platform built with Next.js 15, TypeScript, TailwindCSS, Prisma, and PostgreSQL.
 
 ## Features
